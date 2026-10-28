@@ -1,0 +1,5 @@
+# Diagnostic overlay: verbose logs + mirror console output to the USB-Serial-JTAG CDC port
+# (only works until TinyUSB takes over the USB PHY). Build with:
+#   idf.py -B build-dbg4 -DSDKCONFIG=build-dbg4/sdkconfig -DSDKCONFIG_DEFAULTS="sdkconfig.defaults;sdkconfig.debug" build
+CONFIG_LOG_DEFAULT_LEVEL_DEBUG=y
+CONFIG_ESP_CONSOLE_SECONDARY_USB_SERIAL_JTAG=y

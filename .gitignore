@@ -1,0 +1,23 @@
+# ESP-IDF build output and generated config (sdkconfig can hold WiFi credentials)
+build*/
+sdkconfig
+sdkconfig.old
+sdkconfig.secrets
+managed_components/
+*.bin.tmp
+
+# Editor / OS noise
+*.bak
+.vscode/
+.DS_Store
+Thumbs.db
+__pycache__/
+
+# Vendor reference files (Waveshare STEP model, drawings): download from the wiki, see enclosure*/README.md
+enclosure*/ref/
+
+# Claude desktop session files
+.claude/
+
+# Test run logs
+logs/

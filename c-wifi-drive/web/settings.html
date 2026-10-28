@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width" />
+  <title>ESP32 USB File Server</title>
+  <link href="/styles.css" rel="stylesheet" />
+</head>
+
+<div class="settings-header link-white">
+  <a class="header-left" id="return-button" href="/">
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width=".75em"
+      height="1.5em"
+      viewBox="0 0 12 24"
+    >
+      <path
+        fill="currentColor"
+        fill-rule="evenodd"
+        d="m3.343 12l7.071 7.071L9 20.485l-7.778-7.778a1 1 0 0 1 0-1.414L9 3.515l1.414 1.414z"
+      />
+    </svg>
+  </a>
+  <div class="header-center">ESP USB File Server</div>
+  <div class="header-right">
+    <span id="remain"></span>
+  </div>
+</div>
+
+<div style="margin-bottom: 3em"></div>
+
+
+
+<div class="settings-main"  >
+  <h3>Card handoff</h3>
+  <table>
+    <tr>
+      <td style="font-weight: bold">Hand back after</td>
+      <td><input type="number" id="releaseS" min="1" max="600" step="1" style="width: 6em" /> s without WiFi file activity</td>
+    </tr>
+    <tr>
+      <td style="font-weight: bold">Hard handoff</td>
+      <td><label><input type="checkbox" id="hardHandoff" /> re-enumerate USB after handing back (for hosts that ignore media changes)</label></td>
+    </tr>
+  </table>
+  <button id="saveOwner" class="w100" type="button">Save handoff settings</button>
+  <div style="margin-bottom: 2rem"></div>
+
+  <h3>Setup network</h3>
+  <p style="font-size: 0.9em; color: #555">The drive can open its own network <code class="setupName">WiFi-Drive-XXXX</code>
+  (default password <code>wifidrive</code>) and show a join QR code on its screen. It does this by itself when it
+  cannot reach your WiFi; start it here to show the QR code now, for example to connect a phone. On the setup
+  network this page is at <code>http://192.168.4.1/settings.html</code>.</p>
+  <p>Setup network: <b id="apState">checking...</b></p>
+  <button id="apToggle" class="w100" type="button" data-on="0">Start setup network</button>
+  <div style="margin-bottom: 2rem"></div>
+  <script>
+    (async () => {
+      try {
+        const s = await (await fetch('/api/status', { cache: 'no-store' })).json();
+        document.getElementById('releaseS').value = Math.round(s.release_ms / 1000);
+        document.getElementById('hardHandoff').checked = !!s.hard_handoff;
+        setApState(s);
+        if (s.setup_ssid) { document.querySelectorAll('.setupName').forEach((e) => { e.textContent = s.setup_ssid; }); }
+        if (s.sta_ssid) { document.getElementById('stassid').value = s.sta_ssid; }
+        if (s.ap_ssid && !s.fallback_ap) { document.getElementById('apssid').value = s.ap_ssid; }
+        const modeEl = document.getElementById(s.sta_ssid && s.ap_ssid && !s.fallback_ap ? 'apsta' : (s.sta_ssid ? 'sta' : 'ap'));
+        if (modeEl) { modeEl.checked = true; modeEl.dispatchEvent(new Event('change')); }
+      } catch (e) {}
+    })();
+    function setApState(s) {
+      const on = !!s.fallback_ap;
+      document.getElementById('apState').textContent = on ? ('on: ' + s.ap_ssid + ' (QR code on the screen)') : 'off';
+      const b = document.getElementById('apToggle');
+      b.textContent = on ? 'Stop setup network' : 'Start setup network';
+      b.dataset.on = on ? '1' : '0';
+    }
+    document.getElementById('apToggle').addEventListener('click', async () => {
+      const on = document.getElementById('apToggle').dataset.on === '1';
+      if (on && !confirm('Stop the setup network? If you are connected through it you will lose this page.')) { return; }
+      const r = await fetch('/api/wifi?ap=' + (on ? 0 : 1), { method: 'POST' });
+      if (!r.ok) { alert('Failed'); return; }
+      document.getElementById('apState').textContent = on ? 'stopping...' : 'starting...';
+      setTimeout(async () => {
+        try { setApState(await (await fetch('/api/status', { cache: 'no-store' })).json()); } catch (e) {}
+      }, 1000);
+    });
+    document.getElementById('saveOwner').addEventListener('click', async () => {
+      const rs = document.getElementById('releaseS').value;
+      const hard = document.getElementById('hardHandoff').checked ? 1 : 0;
+      const r = await fetch('/api/settings?release_s=' + rs + '&hard=' + hard, { method: 'POST' });
+      alert(r.ok ? 'Saved' : 'Failed');
+    });
+  </script>
+
+  <h3>WiFi</h3>
+  <p style="font-size: 0.9em; color: #555">STA = join your home network (recommended). AP = the drive makes its own network.
+  If the drive cannot join the network you enter, it starts a setup network named <code class="setupName">WiFi-Drive-XXXX</code>
+  (default password <code>wifidrive</code>); connect to it and come back here.</p>
+  <form id="wifiForm" method="post" action="/settings.html">
+    <table>
+      <!-- Wi-Fi Mode Selection -->
+      <tr>
+        <td style="font-weight: bold">WIFI Mode</td>
+        <td>
+          <input type="radio" id="ap" name="wifimode" value="ap" required />
+          <label for="ap">AP</label>
+          <input type="radio" id="sta" name="wifimode" value="sta" />
+          <label for="sta">STA</label>
+          <input type="radio" id="apsta" name="wifimode" value="apsta" />
+          <label for="apsta">AP+STA</label>
+        </td>
+      </tr>
+    </table>
+
+    <!-- AP Mode Fields -->
+    <div id="apFields" class="hidden">
+      <table style="width: 98%;">
+        <tr>
+          <td style="font-weight: bold">
+            <label for="apssid">AP SSID</label>
+          </td>
+          <td>
+            <input
+              type="text"
+              id="apssid"
+              name="apssid"
+              class="w100"
+              placeholder="Name of the network the drive creates"
+            />
+          </td>
+        </tr>
+        <tr>
+          <td style="font-weight: bold">
+            <label for="appassword">AP Password</label>
+          </td>
+          <td>
+            <input
+              type="password"
+              id="appassword"
+              name="appassword"
+              class="w100"
+              placeholder="Leave blank for no password"
+            />
+          </td>
+        </tr>
+      </table>
+    </div>
+
+    <!-- STA Mode Fields -->
+    <div id="staFields" class="hidden">
+      <table style="width: 98%;">
+        <tr>
+          <td style="font-weight: bold">
+            <label for="stassid">STA SSID</label>
+          </td>
+          <td>
+            <input
+              type="text"
+              id="stassid"
+              name="stassid"
+              class="w100"
+              placeholder="Your home network name"
+            />
+          </td>
+        </tr>
+        <tr>
+          <td style="font-weight: bold">
+            <label for="stapassword">STA Password</label>
+          </td>
+          <td>
+            <input
+              type="password"
+              id="stapassword"
+              name="stapassword"
+              class="w100"
+              placeholder="Leave blank for no password"
+            />
+          </td>
+        </tr>
+      </table>
+    </div>
+    <button type="submit" class="w100">Submit!</button>
+  </form>
+</div>
+
+<script>
+  const apRadio = document.getElementById('ap');
+  const staRadio = document.getElementById('sta');
+  const apstaRadio = document.getElementById('apsta');
+  const apFields = document.getElementById('apFields');
+  const staFields = document.getElementById('staFields');
+  const form = document.getElementById('wifiForm');
+
+  document.querySelectorAll('input[name="wifimode"]').forEach((radio) => {
+    radio.addEventListener('change', () => {
+      if (apRadio.checked) {
+        apFields.classList.remove('hidden');
+        staFields.classList.add('hidden');
+      } else if (staRadio.checked) {
+        apFields.classList.add('hidden');
+        staFields.classList.remove('hidden');
+      } else if (apstaRadio.checked) {
+        apFields.classList.remove('hidden');
+        staFields.classList.remove('hidden');
+      }
+    });
+  });
+
+  form.addEventListener('submit', (e) => {
+    const apChecked = apRadio.checked || apstaRadio.checked;
+    const staChecked = staRadio.checked || apstaRadio.checked;
+
+    if (apChecked) {
+      const apSsid = document.getElementById('apssid');
+      if (!apSsid.value) {
+        alert('AP SSID is required for AP mode');
+        e.preventDefault();
+        return;
+      }
+    }
+
+    if (staChecked) {
+      const staSsid = document.getElementById('stassid');
+      if (!staSsid.value) {
+        alert('STA SSID is required for STA mode');
+        e.preventDefault();
+        return;
+      }
+    }
+  });
+
+</script>

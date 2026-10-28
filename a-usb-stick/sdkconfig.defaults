@@ -1,0 +1,47 @@
+# This file was generated using idf.py save-defconfig. It can be edited manually.
+# Espressif IoT Development Framework (ESP-IDF) Project Minimal Configuration
+#
+CONFIG_TINYUSB_MSC_ENABLED=y
+
+CONFIG_PARTITION_TABLE_CUSTOM=y
+CONFIG_PARTITION_TABLE_CUSTOM_FILENAME="partitions.csv"
+CONFIG_PARTITION_TABLE_FILENAME="partitions.csv"
+CONFIG_ESPTOOLPY_FLASHSIZE_16MB=y
+CONFIG_WL_SECTOR_SIZE_512=y
+CONFIG_WL_SECTOR_MODE_PERF=y
+
+CONFIG_FATFS_LFN_HEAP=y
+
+# On chips with USB Serial JTAG, disable secondary console which does not make sense when using console component
+CONFIG_ESP_CONSOLE_SECONDARY_NONE=y
+# CONFIG_ESP_CONSOLE_SECONDARY_USB_SERIAL_JTAG is not set
+
+# ---- Waveshare ESP32-S3-LCD-1.47 (ESP32-S3R8, 16 MB flash, 8 MB octal PSRAM) ----
+CONFIG_IDF_TARGET="esp32s3"
+CONFIG_ESP_DEFAULT_CPU_FREQ_MHZ_240=y
+CONFIG_SPIRAM=y
+CONFIG_SPIRAM_MODE_OCT=y
+CONFIG_SPIRAM_SPEED_80M=y
+
+# Expose the microSD card instead of SPI flash. 1-bit SDMMC: the board has D1/D2 behind
+# unpopulated 0R jumpers (R11/R18), so 4-bit init fails with a data start-bit error.
+CONFIG_EXAMPLE_STORAGE_MEDIA_SDMMC=y
+# CONFIG_EXAMPLE_SDMMC_BUS_WIDTH_4 is not set
+CONFIG_EXAMPLE_SDMMC_BUS_WIDTH_1=y
+CONFIG_EXAMPLE_PIN_CLK=14
+CONFIG_EXAMPLE_PIN_CMD=15
+CONFIG_EXAMPLE_PIN_D0=16
+CONFIG_EXAMPLE_PIN_D1=18
+CONFIG_EXAMPLE_PIN_D2=17
+CONFIG_EXAMPLE_PIN_D3=21
+
+# TinyUSB owns the USB port, so the console/REPL goes to UART0 (TXD/RXD on the header)
+CONFIG_ESP_CONSOLE_UART_DEFAULT=y
+
+# MSC transfer buffer: sectors per USB transfer / SD command (esp_tinyusb default 512 = 1 sector; S3 max 8192)
+CONFIG_TINYUSB_MSC_BUFSIZE=8192
+
+# Flashing: the board is put into download mode by the BOOT-hold helper (or the button), so
+# esptool must not toggle DTR/RTS first: on the ROM's USB-OTG CDC port that resets the chip
+# straight back into the app. Keep the hard reset after flashing (boots the new app).
+CONFIG_ESPTOOLPY_BEFORE_NORESET=y

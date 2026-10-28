@@ -1,0 +1,167 @@
+menu "WiFi Drive"
+
+    menu "Board"
+        config WD_SD_CLK_PIN
+            int "SD CLK GPIO"
+            default 14
+        config WD_SD_CMD_PIN
+            int "SD CMD GPIO"
+            default 15
+        config WD_SD_D0_PIN
+            int "SD D0 GPIO"
+            default 16
+        config WD_SD_4BIT
+            bool "4-bit SD bus (needs the R11/R18 jumpers bridged on this board)"
+            default n
+        config WD_SD_D1_PIN
+            int "SD D1 GPIO"
+            depends on WD_SD_4BIT
+            default 18
+        config WD_SD_D2_PIN
+            int "SD D2 GPIO"
+            depends on WD_SD_4BIT
+            default 17
+        config WD_SD_D3_PIN
+            int "SD D3 GPIO"
+            depends on WD_SD_4BIT
+            default 21
+        config WD_SD_FREQ_KHZ
+            int "SD clock (kHz): 20000 default speed, 40000 high speed"
+            default 40000
+        config WD_LCD_MOSI_PIN
+            int "LCD MOSI GPIO"
+            default 45
+        config WD_LCD_SCLK_PIN
+            int "LCD SCLK GPIO"
+            default 40
+        config WD_LCD_CS_PIN
+            int "LCD CS GPIO"
+            default 42
+        config WD_LCD_DC_PIN
+            int "LCD DC GPIO"
+            default 41
+        config WD_LCD_RST_PIN
+            int "LCD RST GPIO"
+            default 39
+        config WD_LCD_BL_PIN
+            int "LCD backlight GPIO (PWM)"
+            default 48
+        config WD_LCD_BRIGHTNESS
+            int "LCD backlight brightness (%)"
+            range 0 100
+            default 80
+        config WD_LCD_ROTATE_180
+            bool "Rotate the screen 180 degrees (flip if the status word is upside down)"
+            default n
+        config WD_LCD_INVERT
+            bool "Invert LCD colours (this IPS panel needs it)"
+            default y
+        config WD_LCD_BGR
+            bool "LCD colour order BGR"
+            default y
+        config WD_LED_GPIO
+            int "WS2812 LED GPIO"
+            default 38
+        config WD_BOOT_BTN_GPIO
+            int "BOOT button GPIO"
+            default 0
+    endmenu
+
+    menu "Ownership handoff"
+        config WD_USB_IDLE_MS
+            int "USB must be idle this long (ms) before the card is taken from the host"
+            default 1500
+        config WD_RELEASE_MS
+            int "Hand the card back this long (ms) after the last WiFi file operation"
+            default 5000
+        config WD_BORROW_TIMEOUT_MS
+            int "Give up waiting for USB idle after this (ms) and take the card anyway"
+            default 15000
+        config WD_BORROW_FORCE
+            bool "Take the card even if USB never goes idle (interrupts a host mid-copy; off = fail the WiFi operation instead)"
+            default n
+        config WD_HARD_HANDOFF
+            bool "After handing back, force a USB re-enumeration so the host mounts the volume fresh"
+            default y
+    endmenu
+
+    config WIFI_HTTP_ACCESS
+        bool "Enable the WiFi HTTP file server"
+        default y
+
+    config WD_FALLBACK_AP_ENABLE
+        bool "Start a setup access point when the home network cannot be joined (or none is configured)"
+        default y
+    config WD_FALLBACK_AP_PASSWORD
+        string "Setup access point password (8+ characters; empty = open network)"
+        default "wifidrive"
+
+    config WD_MDNS_HOSTNAME
+        string "mDNS hostname (reachable as <name>.local)"
+        default "wifidrive"
+
+    config FATFS_MAX_FILES
+        int "Maximum number of open files"
+        range 1 10
+        default 4
+
+    menu "File server"
+        config HTTP_UPLOAD_MAX_FILE_SIZE_MB
+            int "Max upload file size (MB), -1 for no limit"
+            default -1
+        config HTTP_REDIRECT_TO_ROOT
+            bool "Redirect to root after file operations"
+            default n
+        config FILE_READ_BUFFER_SIZE
+            int "HTTP file read buffer (KB)"
+            default 32
+            range 4 128
+        config FILE_WRITE_TASK_STACK_SIZE
+            int "File write task stack size"
+            default 4096
+        config FILE_WRITE_BUFFER_COUNT
+            int "Ring buffer items for file writes"
+            default 3
+            range 3 16
+        config FILE_WRITE_BUFFER_SIZE
+            int "Ring buffer item size (KB)"
+            default 16
+            range 16 512
+        config FILE_DMA_BUFFER_SIZE
+            int "DMA buffer for file writes (KB)"
+            default 32
+            range 8 64
+        config FILE_WRITE_TIMEOUT_MS
+            int "File write timeout (ms), -1 waits forever"
+            default -1
+            range -1 300000
+    endmenu
+
+    menu "WiFi Settings"
+        config ESP_WIFI_ROUTE_SSID
+            string "WiFi Route SSID"
+            default ""
+        config ESP_WIFI_ROUTE_PASSWORD
+            string "WiFi Route Password"
+            default ""
+        config ESP_WIFI_SOFTAP_SSID
+            string "WiFi softAP SSID (empty = off)"
+            default ""
+        config ESP_WIFI_SOFTAP_PASSWORD
+            string "WiFi softAP Password"
+            default ""
+        config ESP_WIFI_SOFTAP_MAX_STA
+            int "Maximal STA connections"
+            default 4
+        config ESP_WIFI_AP_CHANNEL
+            int "WiFi softAP Channel"
+            default 1
+        config SERVER_IP
+            string "WiFi softAP IP Address"
+            default "192.168.4.1"
+        config ESP_MAXIMUM_RETRY
+            int "Maximum retry"
+            default 10
+    endmenu
+
+endmenu
