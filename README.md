@@ -419,4 +419,6 @@ change.
 - The firmware uses ESP-IDF, esp_tinyusb and the mdns and led_strip components
   (Apache-2.0) and LVGL (MIT).
 - Board documentation and the reference STEP model are from the Waveshare wiki.
-- No licence has been chosen yet for this repository's own code and designs.
+- Everything else in this repository (firmware, tools, documentation and the enclosure
+  designs) is released under the Apache License 2.0; see [LICENSE](LICENSE) and
+  [NOTICE](NOTICE). Copyright 2026 devkriter.

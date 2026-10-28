@@ -1,0 +1,12 @@
+WiFi Drive
+Copyright 2026 devkriter
+
+Licensed under the Apache License, Version 2.0 (see LICENSE).
+
+This repository includes material from Espressif Systems, also licensed
+under the Apache License, Version 2.0:
+  - a-usb-stick/: the tusb_msc example from ESP-IDF
+  - b-wireless-disk/: the usb_msc_wireless_disk example from esp-iot-solution
+  - c-wifi-drive/main/app_http_server.c, app_wifi.c and web/: derived from that example
+  - c-wifi-drive/main/captive_portal.c: derived from the ESP-IDF captive_portal example
+The firmware also uses LVGL (MIT License), fetched at build time.
